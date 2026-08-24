@@ -43,9 +43,14 @@ Content-Type: application/json
   "password": "{{qaPassword}}"
 }
 
+> {%
+    client.global.set("token", response.body.token);
+%}
+
 ### First rating for the closing session
 # Ticket 04, continued. Run this once session 41 loads.
 POST {{baseUrl}}/api/sessions/41/feedback
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -63,6 +68,7 @@ Content-Type: application/json
 
 ### Add a rating
 POST {{baseUrl}}/api/sessions/1/feedback
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -73,6 +79,7 @@ Content-Type: application/json
 
 ### Add an invalid rating - the API should refuse this
 POST {{baseUrl}}/api/sessions/1/feedback
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {

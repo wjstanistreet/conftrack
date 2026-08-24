@@ -107,10 +107,21 @@ public class FeedbackService {
         Session session = requireSession(sessionId);
         List<Feedback> given = feedback.findBySessionIdOrderBySubmittedAtDesc(sessionId);
 
+        // ---- STATION 04 - BLOCK C - "The endpoint 500s" ------------------------
+        // Found with : the Endpoints window plus the HTTP Client. Every route the app
+        //              answers is listed without opening a controller; Alt+Enter on a
+        //              mapping generates a request into an .http file that lives in the
+        //              repository, and environment files hold the base URL and tokens.
+        // Fixed by   : .getAsDouble() -> .orElse(0.0). Session 41 has no feedback yet.
+        // Run it as  : QA's station. Announce it as theirs and let a QA engineer drive.
+        //              The real question is not "why does it throw" but "how would you
+        //              have found which id breaks?"
+        // Proof      : re-run the same request - 200, feedbackCount 0, averageRating 0.
+        // Notes      : docs/stations/STATION-04.md
         double average = given.stream()
                 .mapToInt(Feedback::getRating)
                 .average()
-                .getAsDouble();
+                .orElse(0.0);
 
         Map<Long, String> statuses = new HashMap<>();
         List<Long> ids = given.stream().map(Feedback::getId).toList();
