@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class FeedbackService {
@@ -175,14 +177,29 @@ public class FeedbackService {
                         HttpStatus.NOT_FOUND, "No session with id " + sessionId));
     }
 
+    // ---- STATION 06 - BLOCK D - "The dashboard takes seconds" -----------------
+    // Found with : the IntelliJ Profiler, attached to the running app in one click.
+    //              The flame graph showed one plateau far wider than anything around
+    //              it, and it was this method: "focus on method" put nearly all of it
+    //              in the anyMatch lambda. Every moderation decision (~7,100) was
+    //              scanned for every feedback row (~50,000): ~350 million checks.
+    // Fixed by   : collecting the rejected ids into a Set once, so each row is one
+    //              lookup instead of a scan. Same numbers, a fraction of the time.
+    // Run it as  : show the millisecond readout on the dashboard page before and
+    //              after. Nobody needs to read Java - the exercise is "find the wide
+    //              bit", and List versus Set is the same idea in every language.
+    // Honest     : the production version asks the database for the rejected ids,
+    //              or for the counts and averages, instead of loading every row.
+    // Notes      : docs/stations/STATION-06.md
     /** Feedback a moderator rejected does not count towards a session's numbers. */
     private List<Feedback> countable(List<Feedback> given, List<Moderation> decisions) {
+        Set<Long> rejected = decisions.stream()
+                .filter(decision -> REJECTED.equals(decision.getStatus()))
+                .map(Moderation::getFeedbackId)
+                .collect(Collectors.toSet());
         List<Feedback> kept = new ArrayList<>();
         for (Feedback item : given) {
-            boolean rejected = decisions.stream()
-                    .anyMatch(decision -> REJECTED.equals(decision.getStatus())
-                            && decision.getFeedbackId().equals(item.getId()));
-            if (!rejected) {
+            if (!rejected.contains(item.getId())) {
                 kept.add(item);
             }
         }
