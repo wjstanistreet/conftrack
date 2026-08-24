@@ -43,3 +43,13 @@ proof that it worked.
   step, and `STATION-07.md` on the CVE still being flagged. Those three carry decisions that are
   yours, not this repository's.
 - Do the dry run with somebody who does not know Java.
+- First `./gradlew build` on a real machine is the only true test of this repository: it was
+  written without access to a Maven repository, so pin the Spring Boot version you actually
+  standardise on rather than trusting the `3.4.5` in `build.gradle`.
+- If the `h2` profile fails with "Unsupported Database: H2", add
+  `implementation 'org.flywaydb:flyway-database-h2'` to `build.gradle`. Flyway 10 split its
+  database support into modules and the exact split moves between versions.
+- Station 04: in `requests/feedback.http`, press Alt + Enter on `{{qaPassword}}` and check that
+  the IDE offers to add it to the private environment file. If your build does not, attendees
+  create `requests/http-client.private.env.json` by hand, with the same environment names as
+  `http-client.env.json`.
