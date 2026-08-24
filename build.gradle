@@ -31,8 +31,17 @@ dependencies {
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-database-postgresql'
 
+    // ---- STATION 07 - BLOCK D - "The dependency is vulnerable" ---------------
+    // Found with : Package Checker. The vulnerable coordinate was highlighted inline,
+    //              in this file, with the CVE and the safe version in the tooltip -
+    //              at the moment you would have added it, not days later in CI.
+    // Fixed by   : 1.9 -> 1.10.0 (CVE-2022-42889, "Text4Shell").
+    // Run it as  : five minutes on the projector, not hands-on. Cut this first if you
+    //              are over time. Check before the day that this version still trips
+    //              Package Checker in your pinned IDEA build.
+    // Notes      : docs/stations/STATION-07.md
     // Used by FeedbackService to escape attendee comments before they reach the dashboard.
-    implementation 'org.apache.commons:commons-text:1.9'
+    implementation 'org.apache.commons:commons-text:1.10.0'
 
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
