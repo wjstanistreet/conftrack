@@ -34,6 +34,19 @@ spring:
 
 conftrack:
   feedback:
+    # ---- STATION 02 - BLOCK A - "Nobody knows the key names" -----------------
+    # Found with : Spring configuration completion in YAML. Ctrl+Space under
+    #              conftrack.feedback offered the keys of our own
+    #              @ConfigurationProperties class, with their types and defaults.
+    #              Ctrl+click jumps from a key to the field in FeedbackProperties
+    #              that it binds to.
+    # Fixed by   : adding the two settings ticket 02 asks for.
+    # Run it as  : nobody in the room knows these key names. Ask them to guess one
+    #              before you press Ctrl+Space.
+    # Proof      : GET /api/dashboard/settings shows minimumRating 2, recentDays 7.
+    # Notes      : docs/stations/STATION-02.md
+    minimum-rating: 2
+    recent-days: 7
 
   api:
     # Demo credentials for the QA login in requests/feedback.http. Never real ones.
