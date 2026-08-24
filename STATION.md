@@ -1,74 +1,45 @@
-# Station 08 — The page says "undefined"
+# Solution
 
-**Block:** E, "fix the UI, together" · **Time:** ~12 minutes ·
-**Fixed on:** `solution/station-08` (also `solution/block-e` and `solution/complete`)
+Every station fixed. This is the branch you push publicly after the session, and the branch you
+walk the volunteers through three days before it.
 
-## The symptom
+**A note on its name.** The plan called this branch `solution`, but git stores branches as paths,
+so a branch called `solution` cannot coexist with `solution/block-a`. It is `solution/complete`
+here. If you would rather have a bare `solution`, rename the checkpoints to `checkpoint/block-a`
+and friends.
 
-**Ticket:** `BACKLOG.md` 08, "The average rating column is broken".
+The eight station write-ups are in `docs/stations/`. Each one covers the symptom, the bug, the
+fix, which tool finds it, how to drive that tool, how to run the room, and the language-neutral
+proof that it worked.
 
-The dashboard loads, the rows are right, and the "Average rating" column says `undefined` for
-every session. The API response is correct.
+| # | Block | Station | Branch |
+|---|-------|---------|--------|
+| 00 | -- | Open the project | `main` |
+| 01 | A | It won't start | `solution/station-01` |
+| 02 | A | Nobody knows the key names | `solution/station-02`, `solution/block-a` |
+| 03 | B | The schema doesn't match | `solution/station-03`, `solution/block-b` |
+| 04 | C | The endpoint 500s, and writes need a login | `solution/station-04` |
+| 05 | C | The right code, the wrong bean | `solution/station-05`, `solution/block-c` |
+| 06 | D | The dashboard takes seconds | `solution/station-06` |
+| 07 | D | The dependency is vulnerable | `solution/station-07`, `solution/block-d` |
+| 08 | E | The page says "undefined" | `solution/station-08`, `solution/block-e`, `solution/complete` |
 
-## The bug
+## The eight shortcuts to put on the cheat sheet
 
-`dashboard.ts` declares and reads `avgRating`. The `SessionSummary` DTO serialises
-`averageRating`.
+| Shortcut | What it does | Station |
+|---|---|---|
+| Double Shift | Search Everywhere | 00 |
+| Ctrl/Cmd + click gutter icon | Navigate injection points | 01 |
+| Ctrl + Space | Completion in YAML and properties | 02 |
+| Ctrl + Enter | Execute statement in the SQL console | 03 |
+| Alt + Enter | Generate an HTTP request from a mapping; add a missing variable to the env file | 04 |
+| Alt + F8 | Evaluate expression against live beans | 05 |
+| Run > Profile | Attach the profiler, then re-profile | 06 |
+| Shift + F6 | Rename a TypeScript field and its usages together | 08 |
 
-## The fix
+## Before the day
 
-In `dashboard.ts`, rename `avgRating` to `averageRating` in the interface and at the one place it
-is read, then rebuild the frontend (see below).
-
-## The tool, and how to drive it
-
-**Full JavaScript/TypeScript/HTML/CSS support — effectively WebStorm inside the IDE you already
-have open — driven through Code With Me by a remote attendee.**
-
-1. **Hand the session to someone online.** Start Code With Me, send the link in the chat, give
-   them control, and let them drive on the shared screen. This is the single best thing you can
-   do for the remote half of a hybrid audience, and it demos a subscription feature while you do
-   it.
-2. In `dashboard.ts`, put the caret on `avgRating` in the `SessionSummary` interface and press
-   **⇧F6** (Rename). Type `averageRating`: IDEA renames the declaration and the one place
-   `render()` reads it, together. Open `SessionSummary.java` beside it to show that the two names
-   now match. Renaming from the Java side would not help: before the fix the TypeScript uses a
-   different name, so nothing links the two.
-3. In `dashboard.ts`, show what the free tier does not have: completion on `response.json()`
-   results, ⌘-click navigation, the TypeScript service flagging errors as you type, and
-   breakpoints in the browser code that stop *inside the IDE*.
-4. Optional and very effective: debug the frontend. Put a breakpoint in `render()`, reload the
-   page, and inspect `row` — `averageRating` is there, `avgRating` is not.
-
-**Without the subscription:** the `.ts` file is a text file. No completion, no navigation, no
-refactoring, no JavaScript debugger. Two windows and two mental models.
-
-## Rebuilding the dashboard
-
-The page loads `dashboard.js`, compiled from `dashboard.ts`. Both are committed, so nobody needs
-Node installed to run the app.
-
-- If Node is available: `npm run build` (or let IDEA's TypeScript service compile on save).
-- If it is not: the corrected `dashboard.js` is committed on this branch, so checking out
-  `solution/station-08` gets you a working page either way.
-
-**Read this before the day:** this is the one place where the plan and reality do not quite meet.
-A browser cannot run `.ts`, so a real TypeScript station needs either a compile step or a
-committed build output. Committed output is the lower-risk choice for a workshop and it is what
-this repository does — but it does mean an attendee who edits the `.ts` without Node will not see
-the page change until they check out the branch. Decide which trade-off you want and say it out
-loud when you get here.
-
-## How to run the room
-
-- **Announce that this block belongs to the JS developers** at the start of the day. People stay
-  engaged through the parts that are not theirs when they know their turn is coming.
-- Pick your remote driver in advance and warn them. Volunteering someone cold on a hybrid call
-  produces silence.
-- Have a backup: if Code With Me will not connect, drive it yourself and say what you were going
-  to demonstrate. Do not spend eight minutes debugging a screen-share.
-
-## Proof it worked
-
-Refresh the page. A number where `undefined` used to be. It is the most satisfying proof in the
-session — end on it.
+- Re-read `docs/stations/STATION-03.md` on `ddl-auto`, `STATION-08.md` on the TypeScript build
+  step, and `STATION-07.md` on the CVE still being flagged. Those three carry decisions that are
+  yours, not this repository's.
+- Do the dry run with somebody who does not know Java.
