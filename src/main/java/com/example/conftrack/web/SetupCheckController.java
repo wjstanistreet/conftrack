@@ -17,7 +17,7 @@ public class SetupCheckController {
                   <h1 style="font-size:3rem;margin:0">OK</h1>
                   <p>Java, Gradle and Spring Boot all work on this machine, and your dependency
                      cache is warm for the workshop.</p>
-                  <p>Reply <strong>"setup done"</strong> to the pre-work email. See you on the day.</p>
+                  <p>See you on the day!</p>
                 </body>
                 </html>
                 """;
