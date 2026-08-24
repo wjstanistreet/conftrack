@@ -1,0 +1,18 @@
+### Everything the dashboard page draws, in one call
+GET {{baseUrl}}/api/dashboard/summary
+Accept: application/json
+
+> {%
+    client.test("summary is quick", function () {
+        client.log("Round trip: " + response.headers.valueOf("X-Response-Time"));
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+%}
+
+### Which beans the running application actually has
+GET {{baseUrl}}/actuator/beans
+Accept: application/json
+
+### Which configuration values actually won
+GET {{baseUrl}}/actuator/configprops
+Accept: application/json

@@ -1,0 +1,12 @@
+{
+  "name": "conftrack-dashboard",
+  "private": true,
+  "version": "0.0.1",
+  "description": "The ConfTrack dashboard. Plain ES modules, no bundler.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: conftrack
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/conftrack
+    username: conftrack
+    password: conftrack
+
+  jpa:
+    hibernate:
+      # Deliberately 'none' rather than 'validate': see docs/stations/STATION-03.md.
+      # With 'validate' the schema check can fire before the bean wiring error of
+      # Station 1, which would spoil the running order.
+      ddl-auto: none
+    open-in-view: false
+
+  flyway:
+    locations: classpath:db/migration/common,classpath:db/migration/postgres
+
+  docker:
+    compose:
+      enabled: true
+      file: compose.yaml
+
+  main:
+    # Legacy setting inherited from the service this was copied from.
+    allow-bean-definition-overriding: true
+
+  profiles:
+    # 'include' rather than 'active' so that adding --spring.profiles.active=h2
+    # on the command line does not silently drop these.
+    include: local,reportng
+
+conftrack:
+  feedback:
+    minimun-rating: 2
+    recent-days: 30
+    low-rating-weight: 1.5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,beans,env,configprops,metrics
+
+server:
+  port: 8080

@@ -1,0 +1,4 @@
+# Shorter window for the weekly report run.
+conftrack:
+  feedback:
+    recent-days: 7

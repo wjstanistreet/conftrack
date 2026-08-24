@@ -1,0 +1,11 @@
+.gradle/
+build/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+.idea/shelf/
+.idea/workspace.xml
+.idea/httpRequests/
+.idea/tasks.xml
+.idea/usage.statistics.xml
+node_modules/
+*.log

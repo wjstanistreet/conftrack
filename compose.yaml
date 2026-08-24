@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: 'postgres:16-alpine'
+    environment:
+      POSTGRES_DB: conftrack
+      POSTGRES_USER: conftrack
+      POSTGRES_PASSWORD: conftrack
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U conftrack -d conftrack' ]
+      interval: 3s
+      timeout: 3s
+      retries: 20

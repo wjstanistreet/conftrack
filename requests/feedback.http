@@ -1,0 +1,27 @@
+### Feedback for a well attended session
+GET {{baseUrl}}/api/sessions/1/feedback
+Accept: application/json
+
+### Feedback for the last slot of the day
+GET {{baseUrl}}/api/sessions/41/feedback
+Accept: application/json
+
+### Add a rating
+POST {{baseUrl}}/api/sessions/1/feedback
+Content-Type: application/json
+
+{
+  "attendeeEmail": "{{attendeeEmail}}",
+  "rating": 5,
+  "comments": "Best ninety minutes of my week."
+}
+
+### Add an invalid rating - the API should refuse this
+POST {{baseUrl}}/api/sessions/1/feedback
+Content-Type: application/json
+
+{
+  "attendeeEmail": "not-an-email",
+  "rating": 9,
+  "comments": "Out of range on purpose."
+}
