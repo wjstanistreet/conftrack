@@ -27,10 +27,20 @@ spring:
     # Legacy setting inherited from the service this was copied from.
     allow-bean-definition-overriding: true
 
-  profiles:
-    # 'include' rather than 'active' so that adding --spring.profiles.active=h2
-    # on the command line does not silently drop it.
-    include: local
+  # ---- STATION 05 - BLOCK C - "The right code, the wrong bean" ---------------
+  # Found with : the Spring Debugger. Expanding this.scorer showed the actual
+  #              instance was LenientFeedbackScorer, not the class we qualified by
+  #              name in Station 01; Alt+F8 on scorer.describe() made the running
+  #              application say so out loud. The context view also showed
+  #              lowRatingWeight resolving to 1.0 rather than its 1.5 default.
+  # Fixed by   : no longer including the "local" profile, which removes both
+  #              LocalScoringConfig's bean override and application-local.yml.
+  #              It used to be included here:
+  #                profiles:
+  #                  include: local
+  # Run it as  : ask the room to predict what this.scorer is before you expand it.
+  #              This is the station that converts the sceptic.
+  # Notes      : docs/stations/STATION-05.md
 
 conftrack:
   feedback:
