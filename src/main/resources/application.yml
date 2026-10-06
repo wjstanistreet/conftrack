@@ -29,14 +29,11 @@ spring:
 
   profiles:
     # 'include' rather than 'active' so that adding --spring.profiles.active=h2
-    # on the command line does not silently drop these.
-    include: local,reportng
+    # on the command line does not silently drop it.
+    include: local
 
 conftrack:
   feedback:
-    minimun-rating: 2
-    recent-days: 30
-    low-rating-weight: 1.5
 
 management:
   endpoints:
