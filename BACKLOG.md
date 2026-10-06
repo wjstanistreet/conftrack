@@ -37,16 +37,20 @@ already knows about it.
 ## 02 — Make the new thresholds take effect
 
 **Request:** "Feedback rated 2 or lower should count as unhappy, not just 1s. The weekly report
-should cover the last 7 days, not 30. Ops say both are already in the config."
+should cover the last 7 days, not 30. Nobody has configured either yet: please add both to
+`application.yml`."
 
-**What happens:** The application starts and runs as if nobody changed anything.
+**What happens:** The application runs on its defaults: a minimum rating of 1 and a 30 day
+window. The `conftrack.feedback` section of `application.yml` is empty, and nobody remembers
+what the keys are called.
 
 **Done when:** In `requests/dashboard.http`, both tests on **"The settings the application is
 running with"** pass. Restart the application after any config change, because config is only
 read at startup.
 
-**Start here:** Run that request first. It needs no database, so it works now. Then open the
-config file its failure message names.
+**Start here:** Run that request first. It needs no database, so it works now. Then open
+`application.yml`, put the caret under `conftrack.feedback`, and let the IDE tell you what the keys
+are called.
 
 ---
 

@@ -56,7 +56,7 @@ business wants, how you will know it is done, and where to start looking.
 |---|-------|---------|----------------------|
 | 00 | — | Nothing is broken. Open the project and look at what appeared. | Search Everywhere, Spring tool window, Endpoints |
 | 01 | A | It will not start. | Spring bean inspections, gutter icons, beans diagram |
-| 02 | A | A setting in `application.yml` has no effect: the settings request in `requests/dashboard.http` fails. | Spring configuration completion and validation |
+| 02 | A | The business wants two new settings, and nobody knows what the keys are called: the settings request in `requests/dashboard.http` fails. | Spring configuration completion and navigation |
 | 03 | B | Every endpoint that touches the database returns 500. | Database tools, SQL console, schema-aware inspections |
 | 04 | C | One particular session id returns 500. | Endpoints window, HTTP Client |
 | 05 | C | The score is wrong, and the code that computes it looks right. | Spring Debugger |

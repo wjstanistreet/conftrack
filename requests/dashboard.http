@@ -8,21 +8,21 @@ Accept: application/json
     });
 %}
 
-### The settings the application is running with, checked against application.yml
+### The settings the application is running with, checked against ticket 02
 # Ticket 02. Needs no database, so it works as soon as the application starts.
 GET {{baseUrl}}/api/dashboard/settings
 Accept: application/json
 
 > {%
-    client.test("minimumRating is the value application.yml sets", function () {
+    client.test("minimumRating is 2", function () {
         client.assert(response.body.minimumRating === 2,
-            "application.yml sets the minimum rating to 2, but the application is running with "
-            + response.body.minimumRating + ". Is that key in application.yml actually being read?");
+            "Ticket 02 wants a minimum rating of 2, but the application is running with "
+            + response.body.minimumRating + ", its default. Set it under conftrack.feedback in application.yml.");
     });
-    client.test("recentDays comes from the reporting profile", function () {
+    client.test("recentDays is 7", function () {
         client.assert(response.body.recentDays === 7,
-            "application-reporting.yml sets recentDays to 7, but the application is running with "
-            + response.body.recentDays + ". Is the reporting profile actually being loaded?");
+            "Ticket 02 wants a 7 day window, but the application is running with "
+            + response.body.recentDays + ", its default. Set it under conftrack.feedback in application.yml.");
     });
 %}
 
@@ -49,9 +49,9 @@ GET {{baseUrl}}/api/dashboard/settings
 Accept: application/json
 
 > {%
-    client.test("unhappy ratings carry the weight application.yml sets", function () {
+    client.test("unhappy ratings carry the 1.5 weight", function () {
         client.assert(response.body.lowRatingWeight === 1.5,
-            "application.yml sets the low rating weight to 1.5, but the application is running with "
+            "The weighted model counts unhappy ratings 1.5 times, but the application is running with "
             + response.body.lowRatingWeight + ". Something is overriding it.");
     });
 %}
