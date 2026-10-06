@@ -39,7 +39,10 @@ HTTP Client requests.
 ```
 
 Same migrations, same seed data, same eight bugs. This is a fully supported way to do the
-workshop, not a degraded one.
+workshop, not a degraded one. The one difference you will notice is Station 06: an in-memory
+database answers queries so quickly that the dashboard takes about half a second rather than
+eight. The profiler still shows exactly the same wide plateau, so the station works; the number
+on the page is just less dramatic.
 
 ## The stations
 
@@ -68,7 +71,7 @@ Nobody gets left behind. Jumping to a checkpoint is a supported move, not a fail
 | `main` | The broken application. The workshop starting point. |
 | `solution/station-01` … `solution/station-08` | End of that station, with everything before it fixed. |
 | `solution/block-a` … `solution/block-e` | End of that block. These are the "everyone catch up" points. |
-| `solution` | Fully working. |
+| `solution/complete` | Fully working. |
 
 Every solution branch carries a `STATION.md` at the repository root explaining what that station
 was for, which tool found it, and how to run that tool. `docs/stations/` accumulates all of them.
