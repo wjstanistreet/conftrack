@@ -1,10 +1,30 @@
 ### Feedback for a well attended session
+# Ticket 03.
 GET {{baseUrl}}/api/sessions/1/feedback
 Accept: application/json
 
+> {%
+    client.test("feedback for session 1 loads", function () {
+        client.assert(response.status === 200,
+            "Expected 200, got " + response.status + ". The application log says why.");
+    });
+%}
+
 ### Feedback for the last slot of the day
+# Ticket 04. Session 41 has no ratings yet.
 GET {{baseUrl}}/api/sessions/41/feedback
 Accept: application/json
+
+> {%
+    client.test("a session with no ratings yet still loads", function () {
+        client.assert(response.status === 200,
+            "Expected 200, got " + response.status + ". Session 41 has no feedback yet, and that should not be an error.");
+    });
+    client.test("a session with no ratings shows an average of 0", function () {
+        client.assert(response.status === 200 && response.body.averageRating === 0,
+            "Expected an averageRating of 0 for a session nobody has rated yet.");
+    });
+%}
 
 ### Add a rating
 POST {{baseUrl}}/api/sessions/1/feedback
