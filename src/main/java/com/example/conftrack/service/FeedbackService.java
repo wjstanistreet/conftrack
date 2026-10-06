@@ -1,6 +1,7 @@
 package com.example.conftrack.service;
 
 import com.example.conftrack.domain.Feedback;
+import com.example.conftrack.domain.Moderation;
 import com.example.conftrack.domain.Session;
 import com.example.conftrack.repo.FeedbackRepository;
 import com.example.conftrack.repo.SessionRepository;
@@ -98,7 +99,8 @@ public class FeedbackService {
                     item.getAttendeeEmail(),
                     item.getRating(),
                     StringEscapeUtils.escapeHtml4(item.getComments()),
-                    item.getSubmittedAt()));
+                    item.getSubmittedAt(),
+                    moderationOf(item)));
         }
 
         return new SessionFeedback(
@@ -126,7 +128,8 @@ public class FeedbackService {
                 saved.getAttendeeEmail(),
                 saved.getRating(),
                 StringEscapeUtils.escapeHtml4(saved.getComments()),
-                saved.getSubmittedAt());
+                saved.getSubmittedAt(),
+                moderationOf(saved));
     }
 
     private Session requireSession(Long sessionId) {
@@ -141,5 +144,10 @@ public class FeedbackService {
                 .average()
                 .orElse(0.0);
         return Math.round(average * 100.0) / 100.0;
+    }
+
+    private String moderationOf(Feedback item) {
+        Moderation moderation = item.getModeration();
+        return moderation == null ? "UNREVIEWED" : moderation.getStatus();
     }
 }

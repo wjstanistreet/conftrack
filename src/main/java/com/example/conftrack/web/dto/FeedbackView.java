@@ -7,5 +7,6 @@ public record FeedbackView(
         String attendeeEmail,
         int rating,
         String comments,
-        LocalDateTime submittedAt) {
+        LocalDateTime submittedAt,
+        String moderation) {
 }
