@@ -49,6 +49,9 @@ on the page is just less dramatic.
 Each station is one symptom and one tool. You are not being asked to write Java. You are being
 asked to **find** the problem with the tool — the fix itself is on the handout, ready to paste.
 
+**Start each station from [`BACKLOG.md`](BACKLOG.md).** It holds one ticket per station: what the
+business wants, how you will know it is done, and where to start looking.
+
 | # | Block | Symptom | The tool for the job |
 |---|-------|---------|----------------------|
 | 00 | — | Nothing is broken. Open the project and look at what appeared. | Search Everywhere, Spring tool window, Endpoints |

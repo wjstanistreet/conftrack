@@ -3,14 +3,13 @@ GET {{baseUrl}}/api/dashboard/summary
 Accept: application/json
 
 > {%
-    client.test("summary is quick", function () {
-        client.log("Round trip: " + response.headers.valueOf("X-Response-Time"));
+    client.test("summary loads", function () {
         client.assert(response.status === 200, "Expected 200, got " + response.status);
     });
 %}
 
 ### The settings the application is running with, checked against application.yml
-# Needs no database, so it works as soon as the application starts.
+# Ticket 02. Needs no database, so it works as soon as the application starts.
 GET {{baseUrl}}/api/dashboard/settings
 Accept: application/json
 
@@ -24,6 +23,36 @@ Accept: application/json
         client.assert(response.body.recentDays === 7,
             "application-reporting.yml sets recentDays to 7, but the application is running with "
             + response.body.recentDays + ". Is the reporting profile actually being loaded?");
+    });
+%}
+
+### Scores count unhappy ratings
+# Ticket 05. A session with feedback should never score 0, however unhappy that feedback was.
+GET {{baseUrl}}/api/dashboard/summary
+Accept: application/json
+
+> {%
+    client.test("every session with feedback has a score above 0", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+        const zero = response.body.filter(function (row) {
+            return row.feedbackCount > 0 && row.score <= 0;
+        });
+        client.assert(zero.length === 0,
+            zero.length + " sessions with feedback score 0, for example session " + (zero.length ? zero[0].sessionId : "")
+            + " (average rating " + (zero.length ? zero[0].averageRating : "") + "). Their unhappy ratings are being thrown away.");
+    });
+%}
+
+### Unhappy ratings count extra
+# Ticket 05, continued.
+GET {{baseUrl}}/api/dashboard/settings
+Accept: application/json
+
+> {%
+    client.test("unhappy ratings carry the weight application.yml sets", function () {
+        client.assert(response.body.lowRatingWeight === 1.5,
+            "application.yml sets the low rating weight to 1.5, but the application is running with "
+            + response.body.lowRatingWeight + ". Something is overriding it.");
     });
 %}
 
