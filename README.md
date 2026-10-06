@@ -53,13 +53,17 @@ asked to **find** the problem with the tool — the fix itself is on the handout
 |---|-------|---------|----------------------|
 | 00 | — | Nothing is broken. Open the project and look at what appeared. | Search Everywhere, Spring tool window, Endpoints |
 | 01 | A | It will not start. | Spring bean inspections, gutter icons, beans diagram |
-| 02 | A | A setting in `application.yml` has no effect. | Spring configuration completion and validation |
+| 02 | A | A setting in `application.yml` has no effect: the settings request in `requests/dashboard.http` fails. | Spring configuration completion and validation |
 | 03 | B | Every endpoint that touches the database returns 500. | Database tools, SQL console, schema-aware inspections |
 | 04 | C | One particular session id returns 500. | Endpoints window, HTTP Client |
 | 05 | C | The score is wrong, and the code that computes it looks right. | Spring Debugger |
 | 06 | D | The dashboard takes seconds to load. | IntelliJ Profiler |
 | 07 | E | The dashboard shows `undefined` where a rating should be. | JavaScript/TypeScript support, Code With Me |
 | 08 | D | A dependency has a published CVE. | Package Checker |
+
+Every bug is in the code from the start, so a later station's error can show up before you reach
+it. Once the application starts after Station 01, the log fills with
+`column f1_0.email does not exist`. That is Station 03's bug, not Station 02's. Leave it for now.
 
 ## Checkpoint branches
 
