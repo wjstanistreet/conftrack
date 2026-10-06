@@ -9,6 +9,24 @@ Accept: application/json
     });
 %}
 
+### The settings the application is running with, checked against application.yml
+# Needs no database, so it works as soon as the application starts.
+GET {{baseUrl}}/api/dashboard/settings
+Accept: application/json
+
+> {%
+    client.test("minimumRating is the value application.yml sets", function () {
+        client.assert(response.body.minimumRating === 2,
+            "application.yml sets the minimum rating to 2, but the application is running with "
+            + response.body.minimumRating + ". Is that key in application.yml actually being read?");
+    });
+    client.test("recentDays comes from the reporting profile", function () {
+        client.assert(response.body.recentDays === 7,
+            "application-reporting.yml sets recentDays to 7, but the application is running with "
+            + response.body.recentDays + ". Is the reporting profile actually being loaded?");
+    });
+%}
+
 ### Which beans the running application actually has
 GET {{baseUrl}}/actuator/beans
 Accept: application/json
