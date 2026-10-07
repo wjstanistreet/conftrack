@@ -111,9 +111,8 @@ in under a second."
 **What happens:** The page loads with the right numbers, slowly. The timing under the
 **Reload** button says several seconds.
 
-**Done when:** The timing under **Reload** is well under a second. On the in-memory `h2`
-database it is already under a second, so note the number first. It should drop to about a
-third of that.
+**Done when:** The timing under **Reload** is well under a second, on either database. Note
+the number before you change anything.
 
 **Start here:** The dashboard page. Then measure where the time goes rather than guess.
 

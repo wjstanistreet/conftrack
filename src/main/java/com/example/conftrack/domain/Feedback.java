@@ -8,7 +8,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
@@ -37,9 +36,6 @@ public class Feedback {
 
     @Column(name = "submitted_at", nullable = false)
     private LocalDateTime submittedAt;
-
-    @OneToOne(mappedBy = "feedback", fetch = FetchType.LAZY)
-    private Moderation moderation;
 
     public Long getId() {
         return id;
@@ -87,9 +83,5 @@ public class Feedback {
 
     public void setSubmittedAt(LocalDateTime submittedAt) {
         this.submittedAt = submittedAt;
-    }
-
-    public Moderation getModeration() {
-        return moderation;
     }
 }

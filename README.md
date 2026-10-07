@@ -39,10 +39,7 @@ HTTP Client requests.
 ```
 
 Same migrations, same seed data, same eight bugs. This is a fully supported way to do the
-workshop, not a degraded one. The one difference you will notice is Station 06: an in-memory
-database answers queries so quickly that the dashboard takes about half a second rather than
-eight. The profiler still shows exactly the same wide plateau, so the station works; the number
-on the page is just less dramatic.
+workshop, not a degraded one.
 
 ## The stations
 
