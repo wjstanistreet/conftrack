@@ -4,6 +4,7 @@ import com.example.conftrack.domain.Feedback;
 import com.example.conftrack.domain.Moderation;
 import com.example.conftrack.domain.Session;
 import com.example.conftrack.repo.FeedbackRepository;
+import com.example.conftrack.repo.ModerationRepository;
 import com.example.conftrack.repo.SessionRepository;
 import com.example.conftrack.web.dto.FeedbackView;
 import com.example.conftrack.web.dto.NewFeedback;
@@ -19,20 +20,27 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class FeedbackService {
 
+    private static final String REJECTED = "REJECTED";
+
     private final SessionRepository sessions;
     private final FeedbackRepository feedback;
+    private final ModerationRepository moderations;
     private final FeedbackScorer scorer;
 
     public FeedbackService(SessionRepository sessions,
                            FeedbackRepository feedback,
+                           ModerationRepository moderations,
                            FeedbackScorer scorer) {
         this.sessions = sessions;
         this.feedback = feedback;
+        this.moderations = moderations;
         this.scorer = scorer;
     }
 
@@ -53,9 +61,10 @@ public class FeedbackService {
     /** Every row the dashboard draws, in one call. */
     @Transactional(readOnly = true)
     public List<SessionSummary> summarise() {
+        List<Moderation> decisions = moderations.findAll();
         List<SessionSummary> rows = new ArrayList<>();
         for (Session session : sessions.findAllForSummary()) {
-            List<Feedback> given = session.getFeedback();
+            List<Feedback> given = countable(session.getFeedback(), decisions);
             rows.add(new SessionSummary(
                     session.getId(),
                     session.getTitle(),
@@ -92,6 +101,12 @@ public class FeedbackService {
                 .average()
                 .getAsDouble();
 
+        Map<Long, String> statuses = new HashMap<>();
+        List<Long> ids = given.stream().map(Feedback::getId).toList();
+        for (Moderation decision : moderations.findAllById(ids)) {
+            statuses.put(decision.getFeedbackId(), decision.getStatus());
+        }
+
         List<FeedbackView> views = new ArrayList<>();
         for (Feedback item : given) {
             views.add(new FeedbackView(
@@ -100,7 +115,7 @@ public class FeedbackService {
                     item.getRating(),
                     StringEscapeUtils.escapeHtml4(item.getComments()),
                     item.getSubmittedAt(),
-                    moderationOf(item)));
+                    statuses.getOrDefault(item.getId(), "UNREVIEWED")));
         }
 
         return new SessionFeedback(
@@ -129,7 +144,7 @@ public class FeedbackService {
                 saved.getRating(),
                 StringEscapeUtils.escapeHtml4(saved.getComments()),
                 saved.getSubmittedAt(),
-                moderationOf(saved));
+                "UNREVIEWED");
     }
 
     private Session requireSession(Long sessionId) {
@@ -138,16 +153,25 @@ public class FeedbackService {
                         HttpStatus.NOT_FOUND, "No session with id " + sessionId));
     }
 
+    /** Feedback a moderator rejected does not count towards a session's numbers. */
+    private List<Feedback> countable(List<Feedback> given, List<Moderation> decisions) {
+        List<Feedback> kept = new ArrayList<>();
+        for (Feedback item : given) {
+            boolean rejected = decisions.stream()
+                    .anyMatch(decision -> REJECTED.equals(decision.getStatus())
+                            && decision.getFeedbackId().equals(item.getId()));
+            if (!rejected) {
+                kept.add(item);
+            }
+        }
+        return kept;
+    }
+
     private double averageOf(List<Feedback> given) {
         double average = given.stream()
                 .mapToInt(Feedback::getRating)
                 .average()
                 .orElse(0.0);
         return Math.round(average * 100.0) / 100.0;
-    }
-
-    private String moderationOf(Feedback item) {
-        Moderation moderation = item.getModeration();
-        return moderation == null ? "UNREVIEWED" : moderation.getStatus();
     }
 }
