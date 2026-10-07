@@ -54,5 +54,5 @@ failing or whose Docker will not start gets moved to `--spring.profiles.active=h
 
 ## Proof it worked
 
-The Endpoints window lists six `/api` routes. If somebody's is empty, their Gradle import has not
+The Endpoints window lists seven `/api` routes. If somebody's is empty, their Gradle import has not
 finished or their licence is not active. Fix that before Station 1.

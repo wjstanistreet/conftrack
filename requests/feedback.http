@@ -20,9 +20,44 @@ Accept: application/json
         client.assert(response.status === 200,
             "Expected 200, got " + response.status + ". Session 41 has no feedback yet, and that should not be an error.");
     });
-    client.test("a session with no ratings shows an average of 0", function () {
-        client.assert(response.status === 200 && response.body.averageRating === 0,
-            "Expected an averageRating of 0 for a session nobody has rated yet.");
+    client.test("a session averages 0 only while nobody has rated it", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status + ".");
+        const expected = response.body.feedbackCount === 0 ? "0" : "above 0";
+        const ok = response.body.feedbackCount === 0
+            ? response.body.averageRating === 0
+            : response.body.averageRating > 0;
+        client.assert(ok, "With " + response.body.feedbackCount + " ratings, expected an averageRating of "
+            + expected + ", got " + response.body.averageRating + ".");
+    });
+%}
+
+### Log in as QA
+# Ticket 04. Writes need a token, and this is where it comes from.
+# The password belongs in the private environment file, never in this one.
+# The token comes back in the response body. Save it for the requests below.
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "qa",
+  "password": "{{qaPassword}}"
+}
+
+### First rating for the closing session
+# Ticket 04, continued. Run this once session 41 loads.
+POST {{baseUrl}}/api/sessions/41/feedback
+Content-Type: application/json
+
+{
+  "attendeeEmail": "{{$random.email}}",
+  "rating": 4,
+  "comments": "A strong finish."
+}
+
+> {%
+    client.test("the first rating is accepted", function () {
+        client.assert(response.status === 201,
+            "Expected 201, got " + response.status + ". Writes need a token: log in above and send it as a Bearer token.");
     });
 %}
 

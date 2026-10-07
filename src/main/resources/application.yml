@@ -35,6 +35,10 @@ spring:
 conftrack:
   feedback:
 
+  api:
+    # Demo credentials for the QA login in requests/feedback.http. Never real ones.
+    qa-password: conftrack-qa
+
 management:
   endpoints:
     web:

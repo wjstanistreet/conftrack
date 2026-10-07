@@ -58,7 +58,7 @@ business wants, how you will know it is done, and where to start looking.
 | 01 | A | It will not start. | Spring bean inspections, gutter icons, beans diagram |
 | 02 | A | The business wants two new settings, and nobody knows what the keys are called: the settings request in `requests/dashboard.http` fails. | Spring configuration completion and navigation |
 | 03 | B | Every endpoint that touches the database returns 500. | Database tools, SQL console, schema-aware inspections |
-| 04 | C | One particular session id returns 500. | Endpoints window, HTTP Client |
+| 04 | C | One particular session id returns 500, and posting a rating is refused. | Endpoints window, HTTP Client: environments, auth, chaining |
 | 05 | C | The score is wrong, and the code that computes it looks right. | Spring Debugger |
 | 06 | D | The dashboard takes seconds to load. | IntelliJ Profiler |
 | 07 | E | The dashboard shows `undefined` where a rating should be. | JavaScript/TypeScript support, Code With Me |
@@ -97,6 +97,8 @@ src/main/resources/
   db/migration/             Flyway migrations, including ~50,000 seeded feedback rows
   static/                   the TypeScript dashboard, no bundler, no build step to speak of
 requests/                   HTTP Client requests, in version control next to the code they test
+  http-client.env.json      shared variables, one block per environment
+  http-client.private.env.json   your own secrets; git ignores it, so you create it
 ```
 
 ## Ground rules

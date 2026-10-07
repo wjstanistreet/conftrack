@@ -68,17 +68,21 @@ then at what the code asks it for.
 
 ---
 
-## 04 — The closing session must load
+## 04 — The closing session must load, and take its first rating
 
 **Request:** "Closing remarks went on the programme this morning. Nobody has rated it yet, but its
-feedback page must still load, showing a rating of 0."
+feedback page must still load, showing a rating of 0. Then post its first rating, so we know it
+takes one. Writes need the QA login: the password is `conftrack-qa`, and it must not be
+committed."
 
-**What happens:** Feedback for every session loads except one.
+**What happens:** Feedback for every session loads except one. Posting a rating is refused with
+a 401.
 
-**Done when:** In `requests/feedback.http`, the test on **"Feedback for the last slot of the
-day"** passes.
+**Done when:** In `requests/feedback.http`, both tests on **"Feedback for the last slot of the
+day"** pass, and so does the test on **"First rating for the closing session"**.
 
-**Start here:** The Endpoints window. Find the feedback endpoint and call it for session 41.
+**Start here:** The Endpoints window. Find the feedback endpoint and call it for session 41. For
+the rating, start at **"Log in as QA"** and see which variable the IDE cannot resolve.
 
 ---
 
