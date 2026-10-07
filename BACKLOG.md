@@ -1,7 +1,7 @@
 # ConfTrack backlog
 
-These are this week's requests from the product owner. Work them **top to bottom**: 08 comes before
-07 on purpose. Each ticket number is the station number in the workshop.
+These are this week's requests from the product owner. Work them **top to bottom**. Each
+ticket number is the station number in the workshop.
 
 Every ticket says what the business wants, what actually happens, how you will know it is done,
 and where to start looking. None of them says what the bug is. Finding that is the job, and each
@@ -118,7 +118,7 @@ the number before you change anything.
 
 ---
 
-## 08 — Ship the security fix
+## 07 — Ship the security fix
 
 **Request:** "Security flagged CVE-2022-42889, 'Text4Shell', across the company. Confirm we are
 not shipping it, and fix it if we are."
@@ -132,7 +132,7 @@ warning against any of them.
 
 ---
 
-## 07 — The average rating column is broken
+## 08 — The average rating column is broken
 
 **Request:** "The dashboard's Average rating column is broken. Fix it before the demo."
 
