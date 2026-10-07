@@ -58,8 +58,8 @@ business wants, how you will know it is done, and where to start looking.
 | 04 | C | One particular session id returns 500, and posting a rating is refused. | Endpoints window, HTTP Client: environments, auth, chaining |
 | 05 | C | The score is wrong, and the code that computes it looks right. | Spring Debugger |
 | 06 | D | The dashboard takes seconds to load. | IntelliJ Profiler |
-| 07 | E | The dashboard shows `undefined` where a rating should be. | JavaScript/TypeScript support, Code With Me |
-| 08 | D | A dependency has a published CVE. | Package Checker |
+| 07 | D | A dependency has a published CVE. | Package Checker |
+| 08 | E | The dashboard shows `undefined` where a rating should be. | JavaScript/TypeScript support, Code With Me |
 
 Every bug is in the code from the start, so a later station's error can show up before you reach
 it. Once the application starts after Station 01, the log fills with
