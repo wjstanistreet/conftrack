@@ -1,11 +1,10 @@
 # ConfTrack
 
 A small internal service for tracking workshop sessions and the feedback attendees leave for
-them. It is the demo application for the **IntelliJ IDEA Ultimate** workshop.
+them.
 
 It is also broken in eight different ways. That is deliberate. Every one of those eight bugs is
-findable in seconds with a tool the IntelliJ IDEA subscription switches on, and tedious to find
-without one. That contrast is the whole workshop.
+findable with a tool the IntelliJ IDEA subscription switches on.
 
 ---
 
@@ -16,10 +15,7 @@ without one. That contrast is the whole workshop.
 3. Install Docker Desktop and check that `docker run hello-world` works.
 4. Clone this repository, check out `setup-check`, run `./gradlew bootRun`, and confirm you get
    an **OK** page at <http://localhost:8080>.
-5. Reply "setup done" to the pre-work email.
-
-Step 4 matters more than it looks: it downloads every dependency the real project needs, so
-thirty people are not all pulling Spring Boot over the office wifi at the same moment.
+5. Pop a thumbs up on the set-up check message.
 
 ## On the day
 
@@ -100,8 +96,6 @@ requests/                   HTTP Client requests, in version control next to the
 
 ## Ground rules
 
-- **You are pairing, and the person who knows the language least drives.** The other person may
-  talk, point and explain, but not touch the keyboard.
+- **If you're pairing, the person who knows the language least drives.**
 - Shouting "I'm stuck" is expected, not embarrassing.
-- No prizes for finishing first.
-- If you cannot read the code, that is the demonstration, not a problem.
+- It's not a problem if you're can't read the code, the tools are what's being demo'd.
