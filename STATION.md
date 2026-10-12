@@ -1,79 +1,48 @@
-# Station 09 — The new API isn't live yet
+# ConfTrack — every station fixed
 
-**Block:** F, "build against a contract" · **Ticket:** `BACKLOG.md` 09, "Show how many people
-each room holds" · **Fixed on:** `solution/station-09` (also `solution/block-f` and
-`solution/complete`)
+This branch is the finished application: every station's bug found and fixed. Each station's
+write-up is in `docs/stations/`. It covers what was wrong, why it mattered, the tool that found
+it, and the fix.
 
-## What was wrong
+> The free tier tells you what your code says. The subscription tells you what your application
+> is actually doing.
 
-Facilities had published the spec for their new Venue API, in `specs/venue-api.yaml`, but the API
-would not be live for a month. A colleague had already written the client. `GET /api/rooms`
-listed the four rooms, and every `capacity` was `null`.
+## The stations
 
-## Why it happened
+| # | Block | Station | Tool | Branch |
+|---|---|---|---|---|
+| 00 | — | [Open the project](docs/stations/STATION-00.md) | Search Everywhere, Spring tool window, Endpoints | `main` |
+| 01 | A | [It won't start](docs/stations/STATION-01.md) | Spring bean inspections, gutter icons, beans diagram | `solution/station-01` |
+| 02 | A | [Nobody knows the key names](docs/stations/STATION-02.md) | Spring configuration completion | `solution/station-02`, `solution/block-a` |
+| 03 | B | [The schema doesn't match](docs/stations/STATION-03.md) | Database tools, schema-aware inspections | `solution/station-03`, `solution/block-b` |
+| 04 | C | [The endpoint 500s, and writes need a login](docs/stations/STATION-04.md) | Endpoints window, HTTP Client | `solution/station-04` |
+| 05 | C | [The right code, the wrong bean](docs/stations/STATION-05.md) | Spring Debugger | `solution/station-05`, `solution/block-c` |
+| 06 | D | [The dashboard takes seconds](docs/stations/STATION-06.md) | IntelliJ Profiler | `solution/station-06` |
+| 07 | D | [The dependency is vulnerable](docs/stations/STATION-07.md) | Package Checker | `solution/station-07`, `solution/block-d` |
+| 08 | E | [The page says "undefined"](docs/stations/STATION-08.md) | JavaScript/TypeScript support, Code With Me | `solution/station-08`, `solution/block-e` |
+| 09 | F | [The new API isn't live yet](docs/stations/STATION-09.md) | OpenAPI, WireMock, HTTP Client | `solution/station-09`, `solution/block-f`, `solution/complete` |
 
-Two things, one hiding behind the other:
+## Shortcuts worth keeping
 
-1. **There was nothing to call.** `conftrack.venue.base-url` pointed at the real API, which did
-   not exist yet.
-2. **The client got the contract wrong.** `VenueClient` asked for `/rooms`. The spec publishes
-   `/v1/rooms`. Nobody could see that until something was answering on the other end.
+Windows and Linux first, macOS in brackets.
 
-## Why it mattered
+| Shortcut | What it does | Station |
+|---|---|---|
+| Double Shift | Search Everywhere | 00 |
+| Click a bean gutter icon | Jump to what is injected | 01 |
+| Ctrl+Space (⌃Space) | Completion, including in YAML | 02 |
+| Ctrl+click (⌘-click) | Go to a declaration, e.g. from a config key to its field | 02 |
+| Ctrl+Enter (⌘⏎) | Run a statement in the SQL console | 03 |
+| Alt+Enter (⌥⏎) | Fix or generate: a qualifier, a request from an endpoint, a missing env variable, a request from a stub | 01, 04, 09 |
+| Alt+F8 (⌥F8) | Evaluate an expression against the running application | 05 |
+| Run ▸ Profile, or attach | Profile the running application | 06 |
+| Shift+F6 (⇧F6) | Rename something and every usage of it | 08 |
 
-An API that exists only as a document, and a deadline that does not wait for it, is one of the
-most common situations in real projects. Without something to call, the path bug would have
-surfaced on go-live day, in production.
+## Try it on your own projects
 
-## How we found it
-
-**OpenAPI support, the WireMock plugin and the HTTP Client.**
-
-1. We opened `specs/venue-api.yaml`. The IDE understands it: the Structure view, `$ref`
-   completion, and the endpoint in the **Endpoints** window.
-2. The run icon in its gutter offers **Generate WireMock Stubs**. That gave us a stub with the
-   method, the URL and the status code.
-3. We saved it as `wiremock/mappings/venue-api.json`, and gave it a response: the status, a
-   `Content-Type: application/json` header, and the four rooms from the spec's example. The
-   generator writes only the status, and without the header the application cannot read the
-   body as JSON.
-4. **Run WireMock**, at the top of the stub file, started a server on port 8089. It appears in the
-   **Services** window. WireMock reads the stub file when it starts, so it needs a re-run after
-   any edit.
-5. **Alt+Enter** on the stub's URL generated a request in the HTTP Client. It answered with the
-   rooms: an API that does not exist yet, already working.
-6. We pointed the application at the stub and restarted it. Capacity was **still** `null`.
-7. The WireMock console printed **Request was not matched**, with the closest stub,
-   `GET /v1/rooms`, beside what the application sent, `GET /rooms`, and
-   `<<<<< URL does not match`. The application's warning in its log said the same.
-
-## The fix
-
-In `application.yml`, point the application at the stub:
-
-```yaml
-conftrack:
-  venue:
-    base-url: http://localhost:8089
-```
-
-In `VenueClient.capacities()`, change `.uri("/rooms")` to `.uri("/v1/rooms")`.
-
-The finished stub is in `wiremock/mappings/venue-api.json`, and `requests/venue.http` calls it
-directly.
-
-## How we knew it worked
-
-In `requests/rooms.http`, "The rooms on the programme" went green: Room 1 holds 120, Room 2 80,
-Room 3 40 and Room 4 24. Stop WireMock and run it again: the capacities go back to `null`, and the
-rest of the application carries on regardless.
-
-## Without IntelliJ IDEA Ultimate
-
-Write the stub JSON by hand from the spec, find and download WireMock, start it from a terminal,
-and write the request yourself. Or wait a month for Facilities.
-
-## Worth knowing
-
-When the real API goes live, the only change is `base-url`. The stub stays useful for local
-development and tests.
+- Open a Spring project and look at the **Endpoints** window and the **Spring** tool window
+  before reading any code.
+- Keep your API checks in `.http` files next to the code, with secrets in the private environment
+  file.
+- Profile before you optimise. The slow part is rarely where you would guess.
+- When an API you depend on is not ready, stub it from its spec with WireMock instead of waiting.
