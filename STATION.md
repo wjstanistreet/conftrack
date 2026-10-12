@@ -1,48 +1,53 @@
-# Station 07 — The dependency is vulnerable
+# Station 08 — The page says "undefined"
 
-**Block:** D, "make it fast and safe" · **Ticket:** `BACKLOG.md` 07, "Ship the security fix" ·
-**Fixed on:** `solution/station-07` (also `solution/block-d`)
+**Block:** E, "fix the UI, together" · **Ticket:** `BACKLOG.md` 08, "The average rating column
+is broken" · **Fixed on:** `solution/station-08` (also `solution/block-e`)
 
 ## What was wrong
 
-Nothing visible. The build was green, every check passed, and nothing was slow. But Security had
-flagged CVE-2022-42889, "Text4Shell", across the company.
+The dashboard loaded, the rows were right, and the **Average rating** column said `undefined` for
+every session. The API response was correct.
 
 ## Why it happened
 
-`build.gradle` used `org.apache.commons:commons-text:1.9`, a version with that published
-vulnerability. The application really does use it: `FeedbackService` escapes attendee comments
-with `StringEscapeUtils` before they reach the dashboard.
+The Java side sends the field as `averageRating` (in `SessionSummary.java`). The dashboard's
+TypeScript, `dashboard.ts`, declared and read `avgRating`.
 
 ## Why it mattered
 
-There was no symptom, so nothing in the application would ever have told us. Usually you find out
-from a security scan in CI, days later, in a ticket with no context, or in a client's security
-review, where it is expensive and embarrassing.
+Two languages, two names, and nothing linking them. Each side looked correct on its own. There
+was no error and no exception, just `undefined` on the screen, in front of whoever was presenting.
 
 ## How we found it
 
-**Package Checker.**
+**Full JavaScript and TypeScript support, with Code With Me.**
 
-1. We opened `build.gradle`. The vulnerable dependency was already highlighted, with no scan to
-   run and no report to wait for.
-2. Hovering it showed the CVE, its severity, and a version that fixes it.
-3. We changed the version, and the highlight disappeared as we typed.
-
-This appears at the moment you add the dependency, not days later.
+1. We worked on it together through **Code With Me**, with one person driving the shared IDE.
+2. In `dashboard.ts`, with the caret on `avgRating` in the `SessionSummary` interface, **Shift+F6**
+   (Rename) changed the declaration and the place `render()` reads it, together.
+3. Opening `SessionSummary.java` beside it showed the two names now match.
+4. Along the way: completion on the API's results, **Ctrl+click** navigation, and the TypeScript
+   checker flagging errors as you type.
+5. A breakpoint in `render()` stops the browser's code *inside the IDE*. Inspecting `row` shows
+   `averageRating` is there and `avgRating` is not.
 
 ## The fix
 
-In `build.gradle`:
+In `src/main/resources/static/dashboard.ts`, rename `avgRating` to `averageRating`, in the
+interface and where `render()` reads it. Then rebuild the page:
 
-```groovy
-implementation 'org.apache.commons:commons-text:1.10.0'
+```bash
+npm run build
 ```
+
+The page loads `dashboard.js`, which is compiled from `dashboard.ts`, so the change only shows
+once it is rebuilt. Both files are committed, so the page works without Node.
 
 ## How we knew it worked
 
-The highlight was gone, and the build still passed.
+Refreshing the dashboard: a number where `undefined` used to be.
 
 ## Without IntelliJ IDEA Ultimate
 
-You find out from somebody else's security scan, on their schedule.
+The `.ts` file is a text file. No completion, no navigation, no rename across usages, and no
+debugger for the browser code. Two windows, and two mental models.

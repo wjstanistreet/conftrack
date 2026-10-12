@@ -24,7 +24,7 @@ function render(rows) {
                 <td>${row.title}</td>
                 <td>${row.speaker}</td>
                 <td class="num">${row.feedbackCount}</td>
-                <td class="num">${ratingText(row.avgRating)}</td>
+                <td class="num">${ratingText(row.averageRating)}</td>
                 <td class="num">${ratingText(row.score)}</td>
             </tr>`)
         .join('');

@@ -3,12 +3,23 @@
  * Build with: npm run build   (or let IntelliJ's TypeScript service compile on save)
  */
 
+// ---- STATION 08 - BLOCK E - "The page says undefined" -----------------------
+// Found with : JavaScript/TypeScript support - effectively WebStorm inside the IDE
+//              you already have open. A breakpoint in render() shows the real shape
+//              of the object arriving from the API, and Shift+F6 on avgRating renames
+//              the field and the one place it is read, together.
+// Fixed by   : avgRating -> averageRating, here and where it is read below.
+// Why        : two languages, two names, and nothing linking them. No error either,
+//              just "undefined" on screen.
+// Rebuild    : npm run build (or let IDEA's TypeScript service compile on save).
+//              The compiled dashboard.js is committed so nobody needs Node.
+// Notes      : docs/stations/STATION-08.md
 interface SessionSummary {
     sessionId: number;
     title: string;
     speaker: string;
     feedbackCount: number;
-    avgRating: number;
+    averageRating: number;
     score: number;
 }
 
@@ -35,7 +46,7 @@ function render(rows: SessionSummary[]): void {
                 <td>${row.title}</td>
                 <td>${row.speaker}</td>
                 <td class="num">${row.feedbackCount}</td>
-                <td class="num">${ratingText(row.avgRating)}</td>
+                <td class="num">${ratingText(row.averageRating)}</td>
                 <td class="num">${ratingText(row.score)}</td>
             </tr>`)
         .join('');
