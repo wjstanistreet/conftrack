@@ -13,6 +13,7 @@ import com.example.conftrack.web.dto.SessionFeedback;
 import com.example.conftrack.web.dto.SessionListItem;
 import com.example.conftrack.web.dto.SessionSummary;
 import org.apache.commons.text.StringEscapeUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,10 +35,20 @@ public class FeedbackService {
     private final ModerationRepository moderations;
     private final FeedbackScorer scorer;
 
+    // ---- STATION 01 - BLOCK A - "It won't start" -------------------------------
+    // Found with : Spring injection-point inspection and the bean gutter icon. The
+    //              parameter below is underlined before you run anything, and the
+    //              tooltip names both candidate beans. The beans diagram shows two
+    //              arrows landing on FeedbackScorer.
+    // Fixed by   : naming the bean we actually want. IDEA offers this via Alt+Enter.
+    // Why        : the most common way a Spring app fails to start, and the error only
+    //              appears once it has. The IDE flagged it before anything ran.
+    // Careful    : naming a bean is not the same as getting it. See Station 05.
+    // Notes      : docs/stations/STATION-01.md
     public FeedbackService(SessionRepository sessions,
                            FeedbackRepository feedback,
                            ModerationRepository moderations,
-                           FeedbackScorer scorer) {
+                           @Qualifier("weightedFeedbackScorer") FeedbackScorer scorer) {
         this.sessions = sessions;
         this.feedback = feedback;
         this.moderations = moderations;
