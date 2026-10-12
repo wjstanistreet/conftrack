@@ -1,0 +1,82 @@
+### Feedback for a well attended session
+# Ticket 03.
+GET {{baseUrl}}/api/sessions/1/feedback
+Accept: application/json
+
+> {%
+    client.test("feedback for session 1 loads", function () {
+        client.assert(response.status === 200,
+            "Expected 200, got " + response.status + ". The application log says why.");
+    });
+%}
+
+### Feedback for the last slot of the day
+# Ticket 04. Session 41 has no ratings yet.
+GET {{baseUrl}}/api/sessions/41/feedback
+Accept: application/json
+
+> {%
+    client.test("a session with no ratings yet still loads", function () {
+        client.assert(response.status === 200,
+            "Expected 200, got " + response.status + ". Session 41 has no feedback yet, and that should not be an error.");
+    });
+    client.test("a session averages 0 only while nobody has rated it", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status + ".");
+        const expected = response.body.feedbackCount === 0 ? "0" : "above 0";
+        const ok = response.body.feedbackCount === 0
+            ? response.body.averageRating === 0
+            : response.body.averageRating > 0;
+        client.assert(ok, "With " + response.body.feedbackCount + " ratings, expected an averageRating of "
+            + expected + ", got " + response.body.averageRating + ".");
+    });
+%}
+
+### Log in as QA
+# Ticket 04. Writes need a token, and this is where it comes from.
+# The password belongs in the private environment file, never in this one.
+# The token comes back in the response body. Save it for the requests below.
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "qa",
+  "password": "{{qaPassword}}"
+}
+
+### First rating for the closing session
+# Ticket 04, continued. Run this once session 41 loads.
+POST {{baseUrl}}/api/sessions/41/feedback
+Content-Type: application/json
+
+{
+  "attendeeEmail": "{{$random.email}}",
+  "rating": 4,
+  "comments": "A strong finish."
+}
+
+> {%
+    client.test("the first rating is accepted", function () {
+        client.assert(response.status === 201,
+            "Expected 201, got " + response.status + ". Writes need a token: log in above and send it as a Bearer token.");
+    });
+%}
+
+### Add a rating
+POST {{baseUrl}}/api/sessions/1/feedback
+Content-Type: application/json
+
+{
+  "attendeeEmail": "{{attendeeEmail}}",
+  "rating": 5,
+  "comments": "Best ninety minutes of my week."
+}
+
+### Add an invalid rating - the API should refuse this
+POST {{baseUrl}}/api/sessions/1/feedback
+Content-Type: application/json
+
+{
+  "attendeeEmail": "not-an-email",
+  "rating": 9,
+  "comments": "Out of range on purpose."
+}

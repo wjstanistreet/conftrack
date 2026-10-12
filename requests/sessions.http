@@ -1,0 +1,22 @@
+### The whole programme
+GET {{baseUrl}}/api/sessions
+Accept: application/json
+
+> {%
+    client.test("returns the programme", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    client.global.set("firstSessionId", response.body[0].id);
+%}
+
+### One session, with its rating and score
+GET {{baseUrl}}/api/sessions/1
+Accept: application/json
+
+### The last slot of the day
+GET {{baseUrl}}/api/sessions/41
+Accept: application/json
+
+### A session that is not on the programme at all
+GET {{baseUrl}}/api/sessions/9999
+Accept: application/json

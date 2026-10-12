@@ -1,0 +1,9 @@
+.gradle/
+build/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+.idea
+node_modules/
+*.log
+requests/http-client.private.env.json
+target

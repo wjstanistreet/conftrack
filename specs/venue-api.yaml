@@ -1,0 +1,46 @@
+openapi: 3.0.3
+info:
+  title: Venue API
+  version: 1.0.0
+  description: |
+    Facilities' API for the conference venue: the rooms, and how many people each one holds.
+    Published ahead of go-live so that teams can build against it now.
+servers:
+  - url: https://venue.internal.example.com
+paths:
+  /v1/rooms:
+    get:
+      operationId: listRooms
+      summary: Every bookable room, with its seated capacity
+      responses:
+        '200':
+          description: The rooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Room'
+              example:
+                - name: Room 1
+                  capacity: 120
+                - name: Room 2
+                  capacity: 80
+                - name: Room 3
+                  capacity: 40
+                - name: Room 4
+                  capacity: 24
+components:
+  schemas:
+    Room:
+      type: object
+      required: [name, capacity]
+      properties:
+        name:
+          type: string
+          description: The room's name, exactly as it appears on the programme.
+          example: Room 1
+        capacity:
+          type: integer
+          description: How many people the room seats.
+          example: 120

@@ -1,0 +1,17 @@
+### The rooms on the programme, and how many people each one holds
+# Ticket 09. Capacities come from Facilities' Venue API: see specs/venue-api.yaml.
+GET {{baseUrl}}/api/rooms
+Accept: application/json
+
+> {%
+    client.test("every room knows its capacity", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+        client.assert(response.body.length === 4, "Expected 4 rooms, got " + response.body.length);
+        const unknown = response.body.filter(function (room) {
+            return room.capacity === null || room.capacity === undefined;
+        });
+        client.assert(unknown.length === 0,
+            unknown.length + " rooms have no capacity, for example " + (unknown.length ? unknown[0].name : "")
+            + ". The application could not get it from the Venue API: look at its log.");
+    });
+%}

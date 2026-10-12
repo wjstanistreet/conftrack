@@ -1,0 +1,65 @@
+### Everything the dashboard page draws, in one call
+GET {{baseUrl}}/api/dashboard/summary
+Accept: application/json
+
+> {%
+    client.test("summary loads", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+%}
+
+### The settings the application is running with, checked against ticket 02
+# Ticket 02. Needs no database, so it works as soon as the application starts.
+GET {{baseUrl}}/api/dashboard/settings
+Accept: application/json
+
+> {%
+    client.test("minimumRating is 2", function () {
+        client.assert(response.body.minimumRating === 2,
+            "Ticket 02 wants a minimum rating of 2, but the application is running with "
+            + response.body.minimumRating + ", its default. Set it under conftrack.feedback in application.yml.");
+    });
+    client.test("recentDays is 7", function () {
+        client.assert(response.body.recentDays === 7,
+            "Ticket 02 wants a 7 day window, but the application is running with "
+            + response.body.recentDays + ", its default. Set it under conftrack.feedback in application.yml.");
+    });
+%}
+
+### Scores count unhappy ratings
+# Ticket 05. A session with feedback should never score 0, however unhappy that feedback was.
+GET {{baseUrl}}/api/dashboard/summary
+Accept: application/json
+
+> {%
+    client.test("every session with feedback has a score above 0", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+        const zero = response.body.filter(function (row) {
+            return row.feedbackCount > 0 && row.score <= 0;
+        });
+        client.assert(zero.length === 0,
+            zero.length + " sessions with feedback score 0, for example session " + (zero.length ? zero[0].sessionId : "")
+            + " (average rating " + (zero.length ? zero[0].averageRating : "") + "). Their unhappy ratings are being thrown away.");
+    });
+%}
+
+### Unhappy ratings count extra
+# Ticket 05, continued.
+GET {{baseUrl}}/api/dashboard/settings
+Accept: application/json
+
+> {%
+    client.test("unhappy ratings carry the 1.5 weight", function () {
+        client.assert(response.body.lowRatingWeight === 1.5,
+            "The weighted model counts unhappy ratings 1.5 times, but the application is running with "
+            + response.body.lowRatingWeight + ". Something is overriding it.");
+    });
+%}
+
+### Which beans the running application actually has
+GET {{baseUrl}}/actuator/beans
+Accept: application/json
+
+### Which configuration values actually won
+GET {{baseUrl}}/actuator/configprops
+Accept: application/json

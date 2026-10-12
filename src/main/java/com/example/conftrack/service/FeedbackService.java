@@ -1,0 +1,177 @@
+package com.example.conftrack.service;
+
+import com.example.conftrack.domain.Feedback;
+import com.example.conftrack.domain.Moderation;
+import com.example.conftrack.domain.Session;
+import com.example.conftrack.repo.FeedbackRepository;
+import com.example.conftrack.repo.ModerationRepository;
+import com.example.conftrack.repo.SessionRepository;
+import com.example.conftrack.web.dto.FeedbackView;
+import com.example.conftrack.web.dto.NewFeedback;
+import com.example.conftrack.web.dto.SessionDetail;
+import com.example.conftrack.web.dto.SessionFeedback;
+import com.example.conftrack.web.dto.SessionListItem;
+import com.example.conftrack.web.dto.SessionSummary;
+import org.apache.commons.text.StringEscapeUtils;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+public class FeedbackService {
+
+    private static final String REJECTED = "REJECTED";
+
+    private final SessionRepository sessions;
+    private final FeedbackRepository feedback;
+    private final ModerationRepository moderations;
+    private final FeedbackScorer scorer;
+
+    public FeedbackService(SessionRepository sessions,
+                           FeedbackRepository feedback,
+                           ModerationRepository moderations,
+                           FeedbackScorer scorer) {
+        this.sessions = sessions;
+        this.feedback = feedback;
+        this.moderations = moderations;
+        this.scorer = scorer;
+    }
+
+    @Transactional(readOnly = true)
+    public List<SessionListItem> listSessions() {
+        List<SessionListItem> items = new ArrayList<>();
+        for (Session session : sessions.findAllOrdered()) {
+            items.add(new SessionListItem(
+                    session.getId(),
+                    session.getTitle(),
+                    session.getSpeaker(),
+                    session.getRoom(),
+                    session.getStartsAt()));
+        }
+        return items;
+    }
+
+    /** Every row the dashboard draws, in one call. */
+    @Transactional(readOnly = true)
+    public List<SessionSummary> summarise() {
+        List<Moderation> decisions = moderations.findAll();
+        List<SessionSummary> rows = new ArrayList<>();
+        for (Session session : sessions.findAllForSummary()) {
+            List<Feedback> given = countable(session.getFeedback(), decisions);
+            rows.add(new SessionSummary(
+                    session.getId(),
+                    session.getTitle(),
+                    session.getSpeaker(),
+                    given.size(),
+                    averageOf(given),
+                    scorer.score(given)));
+        }
+        return rows;
+    }
+
+    @Transactional(readOnly = true)
+    public SessionDetail detail(Long sessionId) {
+        Session session = requireSession(sessionId);
+        List<Feedback> given = session.getFeedback();
+        return new SessionDetail(
+                session.getId(),
+                session.getTitle(),
+                session.getSpeaker(),
+                session.getRoom(),
+                session.getStartsAt(),
+                given.size(),
+                averageOf(given),
+                scorer.score(given));
+    }
+
+    @Transactional(readOnly = true)
+    public SessionFeedback feedbackFor(Long sessionId) {
+        Session session = requireSession(sessionId);
+        List<Feedback> given = feedback.findBySessionIdOrderBySubmittedAtDesc(sessionId);
+
+        double average = given.stream()
+                .mapToInt(Feedback::getRating)
+                .average()
+                .getAsDouble();
+
+        Map<Long, String> statuses = new HashMap<>();
+        List<Long> ids = given.stream().map(Feedback::getId).toList();
+        for (Moderation decision : moderations.findAllById(ids)) {
+            statuses.put(decision.getFeedbackId(), decision.getStatus());
+        }
+
+        List<FeedbackView> views = new ArrayList<>();
+        for (Feedback item : given) {
+            views.add(new FeedbackView(
+                    item.getId(),
+                    item.getAttendeeEmail(),
+                    item.getRating(),
+                    StringEscapeUtils.escapeHtml4(item.getComments()),
+                    item.getSubmittedAt(),
+                    statuses.getOrDefault(item.getId(), "UNREVIEWED")));
+        }
+
+        return new SessionFeedback(
+                session.getId(),
+                session.getTitle(),
+                views.size(),
+                Math.round(average * 100.0) / 100.0,
+                views);
+    }
+
+    @Transactional
+    public FeedbackView record(Long sessionId, NewFeedback submitted) {
+        Session session = requireSession(sessionId);
+
+        Feedback item = new Feedback();
+        item.setSession(session);
+        item.setAttendeeEmail(submitted.attendeeEmail());
+        item.setRating(submitted.rating());
+        item.setComments(submitted.comments());
+        item.setSubmittedAt(LocalDateTime.now());
+
+        Feedback saved = feedback.save(item);
+        return new FeedbackView(
+                saved.getId(),
+                saved.getAttendeeEmail(),
+                saved.getRating(),
+                StringEscapeUtils.escapeHtml4(saved.getComments()),
+                saved.getSubmittedAt(),
+                "UNREVIEWED");
+    }
+
+    private Session requireSession(Long sessionId) {
+        return sessions.findById(sessionId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "No session with id " + sessionId));
+    }
+
+    /** Feedback a moderator rejected does not count towards a session's numbers. */
+    private List<Feedback> countable(List<Feedback> given, List<Moderation> decisions) {
+        List<Feedback> kept = new ArrayList<>();
+        for (Feedback item : given) {
+            boolean rejected = decisions.stream()
+                    .anyMatch(decision -> REJECTED.equals(decision.getStatus())
+                            && decision.getFeedbackId().equals(item.getId()));
+            if (!rejected) {
+                kept.add(item);
+            }
+        }
+        return kept;
+    }
+
+    private double averageOf(List<Feedback> given) {
+        double average = given.stream()
+                .mapToInt(Feedback::getRating)
+                .average()
+                .orElse(0.0);
+        return Math.round(average * 100.0) / 100.0;
+    }
+}

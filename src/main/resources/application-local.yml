@@ -1,0 +1,4 @@
+# Local developer overrides.
+conftrack:
+  feedback:
+    low-rating-weight: 1.0

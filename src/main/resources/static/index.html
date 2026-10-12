@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ConfTrack dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1>ConfTrack</h1>
+    <p class="sub">Workshop sessions and how they were rated.</p>
+  </header>
+
+  <div class="bar">
+    <button id="reload" type="button">Reload</button>
+    <span id="timing" class="timing">not loaded yet</span>
+  </div>
+
+  <table>
+    <thead>
+    <tr>
+      <th>#</th>
+      <th>Session</th>
+      <th>Speaker</th>
+      <th class="num">Responses</th>
+      <th class="num">Average rating</th>
+      <th class="num">Score</th>
+    </tr>
+    </thead>
+    <tbody id="summary-body">
+    <tr>
+      <td colspan="6" class="empty">Loading&hellip;</td>
+    </tr>
+    </tbody>
+  </table>
+</main>
+
+<script type="module" src="/dashboard.js"></script>
+</body>
+</html>
