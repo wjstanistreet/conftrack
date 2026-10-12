@@ -1,61 +1,84 @@
-# Station 03 — The schema doesn't match
+# Station 04 — The endpoint 500s, and writes need a login
 
-**Block:** B, "make it reach the database" · **Ticket:** `BACKLOG.md` 03, "Show the feedback for
-a session" · **Fixed on:** `solution/station-03` (also `solution/block-b`)
+**Block:** C, "make the API behave" · **Ticket:** `BACKLOG.md` 04, "The closing session must
+load, and take its first rating" · **Fixed on:** `solution/station-04`
 
 ## What was wrong
 
-The application started, then every request that touched the database returned 500. The log said
-`ERROR: column f1_0.email does not exist`.
+Feedback loaded for every session except one: session 41, "Closing remarks", returned 500. Once
+that was fixed, posting a rating was refused with 401.
 
 ## Why it happened
 
-The database migration created the column `attendee_email`. The `Feedback` class, which maps that
-table, asked for a column called `email`.
+Session 41 is on the programme, but nobody has rated it yet. `feedbackFor` worked out the average
+rating with `.getAsDouble()`, which throws when there is nothing to average.
 
-The application is set up not to check its mapping against the database at startup
-(`ddl-auto: none`), so the mismatch only showed up the first time a query ran.
+The 401 was not a bug. Writing to the API needs a login, and the second half of the station was
+about handling that properly.
 
 ## Why it mattered
 
-The code and the database disagreed, and nothing checked one against the other. It compiled, it
-started, and it failed on first use. Anyone who has worked with a database has met this bug in
-some form, in any language.
+- **The edge case hid in plain sight.** It worked for 40 of 41 sessions. The one that failed was
+  the newest, so the first person to find it would have been a real user.
+- **The bug hides itself.** As soon as one rating arrives, the list is no longer empty and the 500
+  goes away. That is how this kind of bug gets through testing.
+- **Secrets need a home.** The QA password is needed to test the API, and must not be committed.
 
 ## How we found it
 
-**Database tools, and schema-aware inspections in the code.**
+**The Endpoints window and the HTTP Client.**
 
-1. In the **Database** tool window, we connected to the Postgres the application uses and
-   browsed `public → feedback`. The column is `attendee_email`. Browsing a schema is free in
-   IntelliJ IDEA now.
-2. What the subscription adds: a SQL console (`select * from feedback limit 10;`, run with
-   **Ctrl+Enter**), editing data in the grid, and exporting results.
-3. With the data source attached to the project, the string `"email"` inside `@Column` in
-   `Feedback.java` was underlined. The IDE checks a string in the code against the live schema,
-   and **Alt+Enter** offers the real column name.
+1. The **Endpoints** window lists every route the application answers, eight of them, without
+   opening a controller.
+2. On `GET /api/sessions/{id}/feedback`, **Alt+Enter** generated a request into an `.http` file,
+   inside the project and in version control.
+3. We ran it and changed the id: session 1 gave 200, session 41 gave 500. Trying ids is exactly
+   what a `.http` file is good at.
+4. After the fix, the rating request gave 401, and its response said where a token comes from.
+5. In "Log in as QA", `{{qaPassword}}` was flagged as unresolved. **Alt+Enter** added it to the
+   **private** environment file, which git ignores. Shared settings go in one file, secrets in the
+   other.
+6. A response handler under the login saved the token for every other request:
 
-The same checks work inside `@Query` and in `.sql` files.
+   ```
+   > {%
+       client.global.set("token", response.body.token);
+   %}
+   ```
+
+7. With `Authorization: Bearer {{token}}` under the `POST`, the rating went through: 201.
+   `{{$random.email}}` gives a different attendee each time.
+8. **Services → HTTP Client** keeps every call as history, with its response.
 
 ## The fix
 
-In `Feedback.java`:
+In `FeedbackService.feedbackFor`:
 
 ```java
-@Column(name = "attendee_email", nullable = false)
+double average = given.stream()
+        .mapToInt(Feedback::getRating)
+        .average()
+        .orElse(0.0);
 ```
+
+`.orElse(0.0)` means "use 0 when there are no ratings to average". Then the token handler and the
+`Authorization` header in `requests/feedback.http`, and the password in
+`requests/http-client.private.env.json`.
 
 ## How we knew it worked
 
-In `requests/feedback.http`, the test on "Feedback for a well attended session" went green, and
-the dashboard stopped showing an error.
+All three ticket 04 tests in `requests/feedback.http` went green. Session 41 loads, and shows its
+first rating.
 
 ## Without IntelliJ IDEA Ultimate
 
-A separate database client to see the schema, and your own eyes to compare it with the code.
-Nothing tells you a string in the code is wrong until the query fails.
+A separate tool such as Postman or curl, requests written by hand, and the token copied out of
+one response and pasted into the next. No link between a request and the code that serves it.
 
-## Worth remembering
+## Worth noticing
 
-Look at the data first, then the code. Finding the truth from the database side works whatever
-language the application is written in.
+- `averageOf()`, just below `feedbackFor` in the same file, already works out an average safely.
+  **Find Usages** on it would have shown that one method was not using it.
+- Tokens live in the application's memory. Restart it and the `POST` gives 401 again until you
+  re-run the login.
+- The private environment file is not on any branch, by design. Everyone creates their own.
