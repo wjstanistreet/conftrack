@@ -25,7 +25,17 @@ public class Feedback {
     @JoinColumn(name = "session_id", nullable = false)
     private Session session;
 
-    @Column(name = "email", nullable = false)
+    // ---- STATION 03 - BLOCK B - "The schema doesn't match" ---------------------
+    // Found with : the Database tools. Connecting and browsing the schema is free;
+    //              running "select * from feedback" in the console, editing the grid
+    //              and exporting the result set are not. With the data source attached
+    //              to the project, IDEA then underlines this string literal in Java
+    //              because it checks it against the live schema.
+    // Fixed by   : one string - "email" -> "attendee_email".
+    // Why        : the code and the database disagreed, and nothing checked one against
+    //              the other until a query ran. Look at the data first, then the code.
+    // Notes      : docs/stations/STATION-03.md
+    @Column(name = "attendee_email", nullable = false)
     private String attendeeEmail;
 
     @Column(nullable = false)

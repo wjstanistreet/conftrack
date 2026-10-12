@@ -1,59 +1,61 @@
-# Station 02 — Nobody knows the key names
+# Station 03 — The schema doesn't match
 
-**Block:** A, "make it start" · **Ticket:** `BACKLOG.md` 02, "Make the new thresholds take
-effect" · **Fixed on:** `solution/station-02` (also `solution/block-a`)
+**Block:** B, "make it reach the database" · **Ticket:** `BACKLOG.md` 03, "Show the feedback for
+a session" · **Fixed on:** `solution/station-03` (also `solution/block-b`)
 
 ## What was wrong
 
-The business wanted feedback rated 2 or lower to count as unhappy, and the weekly report to cover
-7 days. The application was still running on its defaults: a minimum rating of 1 and a 30 day
-window. The `conftrack.feedback` section of `application.yml` was empty.
-
-Nothing crashed, and nothing in the log mentioned configuration. The only symptom was the settings
-request in `requests/dashboard.http`, whose two tests failed.
+The application started, then every request that touched the database returned 500. The log said
+`ERROR: column f1_0.email does not exist`.
 
 ## Why it happened
 
-The settings had never been written, and the ticket gave the values but not the key names. Nobody
-knew them, because they are not Spring's keys: `minimum-rating` and `recent-days` were invented by
-this team, in `FeedbackProperties`.
+The database migration created the column `attendee_email`. The `Feedback` class, which maps that
+table, asked for a column called `email`.
+
+The application is set up not to check its mapping against the database at startup
+(`ddl-auto: none`), so the mismatch only showed up the first time a query ran.
 
 ## Why it mattered
 
-Configuration fails silently. A missing or misspelt key is not an error: the application runs on
-its defaults, and nobody notices until the numbers look wrong. Keys a team invented are not in any
-documentation you can search.
+The code and the database disagreed, and nothing checked one against the other. It compiled, it
+started, and it failed on first use. Anyone who has worked with a database has met this bug in
+some form, in any language.
 
 ## How we found it
 
-**Spring configuration support: completion, documentation and navigation in YAML.**
+**Database tools, and schema-aware inspections in the code.**
 
-1. In `application.yml`, on an empty indented line under `conftrack.feedback:`, we pressed
-   **Ctrl+Space**. The IDE listed the keys of the team's own `@ConfigurationProperties` class,
-   with their types and defaults.
-2. We picked `minimum-rating` and `recent-days`, and gave them the ticket's values.
-3. **Ctrl+click** (⌘-click on macOS) on a key jumps to the field in `FeedbackProperties` it binds
-   to.
-4. Typing a key wrong, such as `minimun-rating`, gets it highlighted as unknown before anything
-   runs.
+1. In the **Database** tool window, we connected to the Postgres the application uses and
+   browsed `public → feedback`. The column is `attendee_email`. Browsing a schema is free in
+   IntelliJ IDEA now.
+2. What the subscription adds: a SQL console (`select * from feedback limit 10;`, run with
+   **Ctrl+Enter**), editing data in the grid, and exporting results.
+3. With the data source attached to the project, the string `"email"` inside `@Column` in
+   `Feedback.java` was underlined. The IDE checks a string in the code against the live schema,
+   and **Alt+Enter** offers the real column name.
+
+The same checks work inside `@Query` and in `.sql` files.
 
 ## The fix
 
-Under `conftrack.feedback` in `application.yml`:
+In `Feedback.java`:
 
-```yaml
-minimum-rating: 2
-recent-days: 7
+```java
+@Column(name = "attendee_email", nullable = false)
 ```
-
-Then restart the application, because configuration is only read at startup.
 
 ## How we knew it worked
 
-Both tests on "The settings the application is running with" went green: `minimumRating` 2 and
-`recentDays` 7.
+In `requests/feedback.http`, the test on "Feedback for a well attended session" went green, and
+the dashboard stopped showing an error.
 
 ## Without IntelliJ IDEA Ultimate
 
-YAML is a text file. You read `FeedbackProperties`, work out the key names by hand, and find a
-typo only when the behaviour turns out to be wrong.
+A separate database client to see the schema, and your own eyes to compare it with the code.
+Nothing tells you a string in the code is wrong until the query fails.
+
+## Worth remembering
+
+Look at the data first, then the code. Finding the truth from the database side works whatever
+language the application is written in.
