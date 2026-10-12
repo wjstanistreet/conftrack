@@ -1,79 +1,80 @@
-# Station 05 — The right code, the wrong bean
+# Station 06 — The dashboard takes seconds
 
-**Block:** C, "make the API behave" · **Ticket:** `BACKLOG.md` 05, "Unhappy ratings must count"
-· **Fixed on:** `solution/station-05` (also `solution/block-c`)
+**Block:** D, "make it fast and safe" · **Ticket:** `BACKLOG.md` 06, "The dashboard is too slow"
+· **Fixed on:** `solution/station-06`
 
 ## What was wrong
 
-Sessions rated only 1s and 2s had a score of `0.0`, as if nobody had rated them, although their
-average rating was not 0. The unhappy ratings were being thrown away.
+The dashboard showed the right numbers, slowly: about 5,500 ms for 41 rows, according to the
+timing under the **Reload** button. Postgres and the in-memory database gave much the same number.
 
-`WeightedFeedbackScorer`, the class we chose by name at Station 01, read correctly. A breakpoint
-in it never fired.
+Most people's first guess was the database. It was not.
 
 ## Why it happened
 
-Two overrides, neither visible in the code we were reading:
+`summarise()` leaves out feedback that a moderator rejected. It does that through `countable()`:
 
-- `LocalScoringConfig` only applies under the `local` profile. It declares a bean *named*
-  `weightedFeedbackScorer` that is really a `LenientFeedbackScorer`, which drops ratings of 2 and
-  below. Because `allow-bean-definition-overriding` is `true`, it silently replaced the real one.
-  The `@Qualifier` from Station 01 picks a bean by name, and the name now pointed somewhere else.
-- `application-local.yml` set `low-rating-weight: 1.0`, which would have cancelled the weighting
-  even if the right bean had won.
+- it goes through about **50,000** feedback rows;
+- for each one, it reads the whole list of about **7,100** moderation decisions, looking for a
+  rejection;
+- 50,000 × 7,100 is about **350 million checks**, on every page load.
 
-Both came in through one line in `application.yml`: `spring.profiles.include: local`.
+Picture a bouncer with 50,000 guests in the queue, who reads the whole 7,100-name banned list top
+to bottom for every guest. The fix is a list you can look a name up in instantly.
 
 ## Why it mattered
 
-Reading the code could not find this. Every file was correct on its own. The bug only existed in
-what Spring assembled at runtime, from a copied flag, a local profile and a reused bean name.
-Nobody wrote it on purpose, and nobody individually is at fault. That is what real production
-incidents look like.
+1. **It grows faster than the data.** Feedback and moderation decisions both grow every week.
+   Double both, and the page is about four times slower.
+2. **It costs everyone.** Each load keeps a CPU core busy for seconds. A room full of people
+   opening the dashboard before a meeting would slow the whole server down.
+3. **Review and tests do not catch it.** Every line looks fine. Nothing in the data is rejected,
+   so the numbers are right. Tests with 20 rows run in milliseconds.
 
 ## How we found it
 
-**The Spring Debugger.**
+**The IntelliJ Profiler.**
 
-1. A breakpoint on the first line *inside* `FeedbackService.summarise()`, then debug the
-   application and call `GET /api/dashboard/summary`.
-2. Expanding `this.scorer`: the declared type is `FeedbackScorer`, and the actual instance was
-   **`LenientFeedbackScorer`**. Nothing in the file we were reading said so.
-3. **Alt+F8** (Evaluate Expression) on `scorer.describe()` returned
-   `lenient(drops ratings <= 2)`. The running application said what it was.
-4. The Spring Debugger's view of the application context showed which bean definition won, and
-   `lowRatingWeight` resolving to `1.0` instead of its `1.5` default.
+1. We noted the timing under **Reload** first, so we would have a before and after.
+2. We attached the profiler to the running application, with nothing to install or configure.
+3. We reloaded the dashboard two or three times, then stopped the recording.
+4. In the **flame graph**, width is time, and each bar calls the bars above it. Following the
+   widest path: the request thread → `DashboardController.summary` →
+   `FeedbackService.summarise` → **`FeedbackService.countable`**, almost the whole width. There
+   was barely any database time in the picture.
+5. **Focus on method** on `countable` showed nearly all of it in one lambda, the `anyMatch` that
+   scans the decisions. From there, the profiler jumps straight to the line.
 
-`GET /actuator/beans` in the HTTP Client is a second witness, if you want one.
+No single line is slow. Each check takes nanoseconds, and the cost is the loop around it. A
+profiler can see that; reading the code cannot.
 
 ## The fix
 
-In `application.yml`, remove the `local` profile:
+In `countable()`, collect the rejected ids into a `Set` once, before the loop:
 
-```yaml
-spring:
-  profiles:
-    include: local
+```java
+Set<Long> rejected = decisions.stream()
+        .filter(decision -> REJECTED.equals(decision.getStatus()))
+        .map(Moderation::getFeedbackId)
+        .collect(Collectors.toSet());
 ```
 
-It was the only profile listed, so the whole `profiles` entry goes.
+then, inside the loop, `if (!rejected.contains(item.getId()))`. One lookup per row instead of
+one scan per row.
 
 ## How we knew it worked
 
-Both "Scores count unhappy ratings" and "Unhappy ratings count extra" in
-`requests/dashboard.http` went green. Session 1's score went from `0.0` to `1.0`, matching its
-average rating, and 16 of the 41 sessions changed on the dashboard. The settings request showed
-`lowRatingWeight` at `1.5`.
+The timing dropped from about 5,500 ms to about 200 ms, with identical numbers on the page.
+Profiling again, `countable` has all but disappeared from the flame graph.
 
 ## Without IntelliJ IDEA Ultimate
 
-Breakpoints tell you what your code did. Which bean Spring chose, and which property value won,
-you have to infer, usually by adding logging and redeploying.
+Add timing logs, guess, redeploy, guess again. Or set up an external profiler.
 
 ## Worth knowing
 
-If you put the breakpoint on the `summarise()` *signature* line, it becomes a method breakpoint,
-and the debugger stops in `FeedbackService$$SpringCGLIB$$0` with `this.scorer` as `null`. That is
-a proxy Spring generates because the method is `@Transactional`. Move the breakpoint into the
-method body, or press **F9** once to reach the real object. The proxy is one more thing Spring
-does that the source code does not show.
+- The same bug exists in every language: `list.includes()` inside a loop in JavaScript, or
+  `x in some_list` inside a loop in Python. So does the fix: a set or a map.
+- The set fixes the hot loop, but the page still loads every feedback row just to count it. A
+  production version would ask the database for the counts and averages with a query, instead of
+  loading every row.
