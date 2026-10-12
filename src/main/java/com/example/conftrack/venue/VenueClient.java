@@ -35,6 +35,15 @@ public class VenueClient {
                 .build();
     }
 
+    // ---- STATION 09 - BLOCK F - "The new API isn't live yet" -------------------
+    // Found with : the WireMock plugin. Generate WireMock Stubs from the gutter of
+    //              specs/venue-api.yaml, Run WireMock, and point conftrack.venue.base-url
+    //              at it. The WireMock console printed "Request was not matched" with
+    //              the closest stub, GET /v1/rooms, beside what we sent, GET /rooms.
+    // Fixed by   : "/rooms" -> "/v1/rooms", the path the spec actually publishes.
+    // Why        : an API that exists only as a document. The stub is the contract,
+    //              running, so the path bug shows up now instead of on go-live day.
+    // Notes      : docs/stations/STATION-09.md
     /**
      * How many people each room seats, keyed by room name. Empty if the Venue API
      * cannot be reached, so a missing API never takes the rest of the app down.
@@ -42,7 +51,7 @@ public class VenueClient {
     public Map<String, Integer> capacities() {
         try {
             List<Room> rooms = client.get()
-                    .uri("/rooms")
+                    .uri("/v1/rooms")
                     .retrieve()
                     .body(new ParameterizedTypeReference<List<Room>>() {
                     });

@@ -1,0 +1,18 @@
+{
+  "mappings" : [ {
+    "request" : {
+      "url" : "/v1/rooms",
+      "method" : "GET"
+    },
+    "response" : {
+      "status" : 200,
+      "headers" : { "Content-Type" : "application/json" },
+      "jsonBody" : [
+        { "name" : "Room 1", "capacity" : 120 },
+        { "name" : "Room 2", "capacity" : 80 },
+        { "name" : "Room 3", "capacity" : 40 },
+        { "name" : "Room 4", "capacity" : 24 }
+      ]
+    }
+  } ]
+}

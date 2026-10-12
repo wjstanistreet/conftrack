@@ -1,53 +1,79 @@
-# Station 08 — The page says "undefined"
+# Station 09 — The new API isn't live yet
 
-**Block:** E, "fix the UI, together" · **Ticket:** `BACKLOG.md` 08, "The average rating column
-is broken" · **Fixed on:** `solution/station-08` (also `solution/block-e`)
+**Block:** F, "build against a contract" · **Ticket:** `BACKLOG.md` 09, "Show how many people
+each room holds" · **Fixed on:** `solution/station-09` (also `solution/block-f` and
+`solution/complete`)
 
 ## What was wrong
 
-The dashboard loaded, the rows were right, and the **Average rating** column said `undefined` for
-every session. The API response was correct.
+Facilities had published the spec for their new Venue API, in `specs/venue-api.yaml`, but the API
+would not be live for a month. A colleague had already written the client. `GET /api/rooms`
+listed the four rooms, and every `capacity` was `null`.
 
 ## Why it happened
 
-The Java side sends the field as `averageRating` (in `SessionSummary.java`). The dashboard's
-TypeScript, `dashboard.ts`, declared and read `avgRating`.
+Two things, one hiding behind the other:
+
+1. **There was nothing to call.** `conftrack.venue.base-url` pointed at the real API, which did
+   not exist yet.
+2. **The client got the contract wrong.** `VenueClient` asked for `/rooms`. The spec publishes
+   `/v1/rooms`. Nobody could see that until something was answering on the other end.
 
 ## Why it mattered
 
-Two languages, two names, and nothing linking them. Each side looked correct on its own. There
-was no error and no exception, just `undefined` on the screen, in front of whoever was presenting.
+An API that exists only as a document, and a deadline that does not wait for it, is one of the
+most common situations in real projects. Without something to call, the path bug would have
+surfaced on go-live day, in production.
 
 ## How we found it
 
-**Full JavaScript and TypeScript support, with Code With Me.**
+**OpenAPI support, the WireMock plugin and the HTTP Client.**
 
-1. We worked on it together through **Code With Me**, with one person driving the shared IDE.
-2. In `dashboard.ts`, with the caret on `avgRating` in the `SessionSummary` interface, **Shift+F6**
-   (Rename) changed the declaration and the place `render()` reads it, together.
-3. Opening `SessionSummary.java` beside it showed the two names now match.
-4. Along the way: completion on the API's results, **Ctrl+click** navigation, and the TypeScript
-   checker flagging errors as you type.
-5. A breakpoint in `render()` stops the browser's code *inside the IDE*. Inspecting `row` shows
-   `averageRating` is there and `avgRating` is not.
+1. We opened `specs/venue-api.yaml`. The IDE understands it: the Structure view, `$ref`
+   completion, and the endpoint in the **Endpoints** window.
+2. The run icon in its gutter offers **Generate WireMock Stubs**. That gave us a stub with the
+   method, the URL and the status code.
+3. We saved it as `wiremock/mappings/venue-api.json`, and gave it a response: the status, a
+   `Content-Type: application/json` header, and the four rooms from the spec's example. The
+   generator writes only the status, and without the header the application cannot read the
+   body as JSON.
+4. **Run WireMock**, at the top of the stub file, started a server on port 8089. It appears in the
+   **Services** window. WireMock reads the stub file when it starts, so it needs a re-run after
+   any edit.
+5. **Alt+Enter** on the stub's URL generated a request in the HTTP Client. It answered with the
+   rooms: an API that does not exist yet, already working.
+6. We pointed the application at the stub and restarted it. Capacity was **still** `null`.
+7. The WireMock console printed **Request was not matched**, with the closest stub,
+   `GET /v1/rooms`, beside what the application sent, `GET /rooms`, and
+   `<<<<< URL does not match`. The application's warning in its log said the same.
 
 ## The fix
 
-In `src/main/resources/static/dashboard.ts`, rename `avgRating` to `averageRating`, in the
-interface and where `render()` reads it. Then rebuild the page:
+In `application.yml`, point the application at the stub:
 
-```bash
-npm run build
+```yaml
+conftrack:
+  venue:
+    base-url: http://localhost:8089
 ```
 
-The page loads `dashboard.js`, which is compiled from `dashboard.ts`, so the change only shows
-once it is rebuilt. Both files are committed, so the page works without Node.
+In `VenueClient.capacities()`, change `.uri("/rooms")` to `.uri("/v1/rooms")`.
+
+The finished stub is in `wiremock/mappings/venue-api.json`, and `requests/venue.http` calls it
+directly.
 
 ## How we knew it worked
 
-Refreshing the dashboard: a number where `undefined` used to be.
+In `requests/rooms.http`, "The rooms on the programme" went green: Room 1 holds 120, Room 2 80,
+Room 3 40 and Room 4 24. Stop WireMock and run it again: the capacities go back to `null`, and the
+rest of the application carries on regardless.
 
 ## Without IntelliJ IDEA Ultimate
 
-The `.ts` file is a text file. No completion, no navigation, no rename across usages, and no
-debugger for the browser code. Two windows, and two mental models.
+Write the stub JSON by hand from the spec, find and download WireMock, start it from a terminal,
+and write the request yourself. Or wait a month for Facilities.
+
+## Worth knowing
+
+When the real API goes live, the only change is `base-url`. The stub stays useful for local
+development and tests.

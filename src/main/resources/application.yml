@@ -63,8 +63,14 @@ conftrack:
     qa-password: conftrack-qa
 
   venue:
-    # Facilities' Venue API. Not live yet: the spec is in specs/venue-api.yaml.
-    base-url: https://venue.internal.example.com
+    # ---- STATION 09 - BLOCK F - "The new API isn't live yet" -----------------
+    # Found with : the WireMock plugin's run configuration, which serves the stubs
+    #              generated from specs/venue-api.yaml. Its port goes here.
+    # Fixed by   : pointing at the WireMock stub until the real Venue API is live.
+    #              On go-live this goes back to https://venue.internal.example.com.
+    # Proof      : GET /api/rooms shows a capacity for all four rooms.
+    # Notes      : docs/stations/STATION-09.md
+    base-url: http://localhost:8089
 
 management:
   endpoints:

@@ -1,0 +1,5 @@
+### The Venue API, as the WireMock stub serves it
+# Run the WireMock stubs in wiremock/mappings/ first. This calls the stub directly, not the
+# application, so it shows what the application should be getting back.
+GET http://localhost:8089/v1/rooms
+Accept: application/json
